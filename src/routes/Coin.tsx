@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuery } from "react-query";
 import {
   useLocation,
   useParams,
@@ -7,6 +8,7 @@ import {
   useMatch,
 } from "react-router-dom";
 import styled from "styled-components";
+import { fetchCoinMetaInfo, fetchCoinPriceInfo } from "../api";
 
 const Overview = styled.div`
   display: flex;
@@ -89,7 +91,7 @@ interface ITag {
   name: string;
 }
 
-interface IInfoData {
+export interface IInfoData {
   id: string;
   name: string;
   symbol: string;
@@ -111,7 +113,7 @@ interface IInfoData {
   last_data_at: string;
 }
 
-interface IPriceData {
+export interface IPriceData {
   id: string;
   name: string;
   symbol: string;
@@ -146,45 +148,56 @@ interface IPriceData {
 }
 
 export default function Coin() {
-  const [loading, setLoading] = React.useState(true);
   const { coinId } = useParams();
   const { state } = useLocation() as ILocation;
-  const [info, setInfo] = React.useState<IInfoData>();
-  const [priceInfo, setPriceInfo] = React.useState<IPriceData>();
   const priceMatch = useMatch("/:coinId/price");
   const chartMatch = useMatch("/:coinId/chart");
+  const { isLoading: metaInfoLoading, data: metaInfoData } =
+    useQuery<IInfoData>(["info", coinId], () =>
+      fetchCoinMetaInfo(coinId as string)
+    );
+  const { isLoading: priceInfoLoading, data: priceInfoData } =
+    useQuery<IPriceData>(["price", coinId], () =>
+      fetchCoinPriceInfo(coinId as string)
+    );
 
   console.log("priceMatch ::::: ", priceMatch);
 
   // console.log("params ::: ", coinId);
   // console.log("name :::: ", name);
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const infoResponse = await (
-          await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-        ).json();
-        const priceResponse = await (
-          await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-        ).json();
-        console.log(infoResponse);
-        console.log(priceResponse);
-        setInfo(infoResponse);
-        setPriceInfo(priceResponse);
-        setLoading(false);
-      } catch (e) {
-        console.warn("error :::: ", e);
-        setLoading(false);
-      }
-    })();
-  }, [coinId]);
+  // React.useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const infoResponse = await (
+  //         await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
+  //       ).json();
+  //       const priceResponse = await (
+  //         await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
+  //       ).json();
+  //       console.log(infoResponse);
+  //       console.log(priceResponse);
+  //       setInfo(infoResponse);
+  //       setPriceInfo(priceResponse);
+  //       setLoading(false);
+  //     } catch (e) {
+  //       console.warn("error :::: ", e);
+  //       setLoading(false);
+  //     }
+  //   })();
+  // }, [coinId]);
+
+  const loading = metaInfoLoading || priceInfoLoading;
 
   return (
     <Container>
       <Header>
         <Title>
-          {state?.name ? state?.name : loading ? "loading... " : info?.name}
+          {state?.name
+            ? state?.name
+            : loading
+            ? "loading... "
+            : metaInfoData?.name}
         </Title>
       </Header>
       {loading ? (
@@ -194,26 +207,26 @@ export default function Coin() {
           <Overview>
             <OverviewItem>
               <span>Rank:</span>
-              <span>{info?.rank}</span>
+              <span>{metaInfoData?.rank}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Symbol:</span>
-              <span>${info?.symbol}</span>
+              <span>${metaInfoData?.symbol}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Open source:</span>
-              <span>{info?.open_source ? "네" : "아니오"}</span>
+              <span>{metaInfoData?.open_source ? "네" : "아니오"}</span>
             </OverviewItem>
           </Overview>
-          <Description>{info?.description}</Description>
+          <Description>{metaInfoData?.description}</Description>
           <Overview>
             <OverviewItem>
               <span>Total suply</span>
-              <span>{priceInfo?.total_supply}</span>
+              <span>{priceInfoData?.total_supply}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Max Supply:</span>
-              <span>{priceInfo?.max_supply}</span>
+              <span>{priceInfoData?.max_supply}</span>
             </OverviewItem>
           </Overview>
           <Tabs>

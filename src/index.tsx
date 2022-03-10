@@ -2,8 +2,11 @@ import React from "react";
 import ReactDOM from "react-dom";
 // import "./index.css";
 import App from "./App";
+import { QueryClient, QueryClientProvider } from "react-query";
 import { ThemeProvider, createGlobalStyle } from "styled-components";
 import { lightTheme } from "./theme";
+
+const queryClient = new QueryClient();
 
 const GlobalStyle = createGlobalStyle`
 
@@ -73,10 +76,12 @@ a {
 
 ReactDOM.render(
   <React.StrictMode>
-    <ThemeProvider theme={lightTheme}>
-      <GlobalStyle />
-      <App />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={lightTheme}>
+        <GlobalStyle />
+        <App />
+      </ThemeProvider>
+    </QueryClientProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );
