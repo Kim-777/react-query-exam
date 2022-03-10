@@ -66,7 +66,7 @@ table {
 	border-spacing: 0;
 }
 
-a: {
+a {
   text-decoration: none;
 }
 `;
