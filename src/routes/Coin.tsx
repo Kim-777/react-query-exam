@@ -8,12 +8,14 @@ import {
   useMatch,
 } from "react-router-dom";
 import styled from "styled-components";
+import { Helmet } from "react-helmet";
 import { fetchCoinMetaInfo, fetchCoinPriceInfo } from "../api";
 
-const Overview = styled.div`
+const Overview = styled.div<{ isDark: boolean }>`
   display: flex;
   justify-content: space-between;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: ${(props) =>
+    props.isDark ? "whitesmoke" : "rgba(0, 0, 0, 0.5)"};
   padding: 10px 20px;
   border-radius: 10px;
 `;
@@ -22,6 +24,8 @@ const OverviewItem = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  color: ${(props) => props.theme.textColor};
 
   span:first-child {
     font-size: 10px;
@@ -157,40 +161,27 @@ export default function Coin() {
       fetchCoinMetaInfo(coinId as string)
     );
   const { isLoading: priceInfoLoading, data: priceInfoData } =
-    useQuery<IPriceData>(["price", coinId], () =>
-      fetchCoinPriceInfo(coinId as string)
+    useQuery<IPriceData>(
+      ["price", coinId],
+      () => fetchCoinPriceInfo(coinId as string),
+      {
+        refetchInterval: 5000,
+      }
     );
-
-  console.log("priceMatch ::::: ", priceMatch);
-
-  // console.log("params ::: ", coinId);
-  // console.log("name :::: ", name);
-
-  // React.useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const infoResponse = await (
-  //         await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-  //       ).json();
-  //       const priceResponse = await (
-  //         await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-  //       ).json();
-  //       console.log(infoResponse);
-  //       console.log(priceResponse);
-  //       setInfo(infoResponse);
-  //       setPriceInfo(priceResponse);
-  //       setLoading(false);
-  //     } catch (e) {
-  //       console.warn("error :::: ", e);
-  //       setLoading(false);
-  //     }
-  //   })();
-  // }, [coinId]);
 
   const loading = metaInfoLoading || priceInfoLoading;
 
   return (
     <Container>
+      <Helmet>
+        <title>
+          {state?.name
+            ? state?.name
+            : loading
+            ? "loading... "
+            : metaInfoData?.name}
+        </title>
+      </Helmet>
       <Header>
         <Title>
           {state?.name
@@ -204,7 +195,7 @@ export default function Coin() {
         <Loader>loading...</Loader>
       ) : (
         <>
-          <Overview>
+          <Overview isDark={false}>
             <OverviewItem>
               <span>Rank:</span>
               <span>{metaInfoData?.rank}</span>
@@ -214,12 +205,16 @@ export default function Coin() {
               <span>${metaInfoData?.symbol}</span>
             </OverviewItem>
             <OverviewItem>
-              <span>Open source:</span>
-              <span>{metaInfoData?.open_source ? "네" : "아니오"}</span>
+              <span>Price:</span>
+              <span>
+                {priceInfoData?.quotes.USD.price
+                  ? `${priceInfoData?.quotes.USD.price.toFixed(2)}`
+                  : "-"}
+              </span>
             </OverviewItem>
           </Overview>
           <Description>{metaInfoData?.description}</Description>
-          <Overview>
+          <Overview isDark={false}>
             <OverviewItem>
               <span>Total suply</span>
               <span>{priceInfoData?.total_supply}</span>
@@ -237,7 +232,7 @@ export default function Coin() {
               <Link to={`/${coinId}/price`}>Price</Link>
             </Tab>
           </Tabs>
-          <Outlet />
+          <Outlet context={{ coinId }} />
         </>
       )}
     </Container>

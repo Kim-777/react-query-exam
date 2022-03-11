@@ -3,6 +3,9 @@ import styled from "styled-components";
 import React from "react";
 import { useQuery } from "react-query";
 import { fetchCoins } from "../api";
+import { Helmet } from "react-helmet";
+import { useSetRecoilState } from "recoil";
+import { isDarkAtom } from "../atoms";
 
 const Title = styled.h1`
   color: ${(props) => props.theme.accentColor};
@@ -32,10 +35,11 @@ const CoinsList = styled.ul``;
 
 const Coin = styled.li`
   background-color: white;
-  color: ${(props) => props.theme.bgColor};
+  color: ${(props) => props.theme.textColor};
   margin-bottom: 10px;
   border-radius: 15px;
   a {
+    color: ${(props) => props.theme.textColor};
     padding: 20px;
     transition: color 0.2s ease-in;
     display: flex;
@@ -64,23 +68,19 @@ const Loader = styled.div`
 `;
 
 function Coins() {
+  const setDarkAtom = useSetRecoilState(isDarkAtom);
   const { isLoading, data } = useQuery<ICoin[]>("allCoins", fetchCoins);
-  // const [coins, setCoins] = React.useState<ICoin[]>([]);
-  // const [loading, setLoading] = React.useState(true);
-
-  // React.useEffect(() => {
-  //   (async () => {
-  //     const response = await fetch("https://api.coinpaprika.com/v1/coins");
-  //     const json = await response.json();
-  //     setCoins(json.slice(0, 100));
-  //     setLoading(false);
-  //   })();
-  // }, []);
 
   return (
     <Container>
+      <Helmet>
+        <title>코인</title>
+      </Helmet>
       <Header>
         <Title>Today's coin</Title>
+        <button onClick={() => setDarkAtom((prev) => !prev)}>
+          Toggle Mode
+        </button>
       </Header>
       {isLoading ? (
         <Loader>loading...</Loader>
